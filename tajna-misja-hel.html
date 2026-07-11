@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Tajna Misja: Hel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@400;600;700&family=Bitter:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2E8D5; --paper-dark:#E4D3A9; --ink:#2B2318;
+    --pine:#1F3A2E; --pine-light:#2F5443; --rust:#C1522A;
+    --gold:#C9A227; --alert:#A6321C; --success:#2F6B44;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, rgba(31,58,46,0.08), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(193,82,42,0.08), transparent 55%),
+      var(--paper);
+    color:var(--ink); font-family:'Bitter', serif;
+    min-height:100vh; min-height:100dvh;
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:40px;
+  }
+  .wrap{ max-width:520px; margin:0 auto; padding:16px; }
+  .sheet{
+    background:var(--paper-dark); border:2px solid var(--ink); border-radius:4px;
+    box-shadow:6px 6px 0 var(--pine), 0 20px 40px rgba(0,0,0,0.2);
+    overflow:hidden; margin-bottom:16px;
+  }
+  header.brief{ background:var(--pine); color:var(--paper); padding:18px 20px 14px; border-bottom:3px solid var(--ink); }
+  .eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin:0 0 4px; }
+  h1{ font-family:'Special Elite', monospace; font-size:clamp(22px,7vw,28px); margin:0; line-height:1.15; }
+  .body-pad{ padding:20px; }
+
+  .btn{
+    display:block; width:100%; font-family:'Special Elite', monospace; font-size:16px;
+    padding:13px 16px; background:var(--rust); color:var(--paper); border:2px solid var(--ink);
+    border-radius:3px; cursor:pointer; box-shadow:3px 3px 0 var(--ink);
+    transition:transform .08s ease, box-shadow .08s ease; text-align:center;
+  }
+  .btn:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .btn.secondary{ background:var(--paper); color:var(--ink); }
+  .btn.small{ padding:9px 12px; font-size:13px; width:auto; display:inline-block; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .team-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:14px; }
+  .team-pick{
+    font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:700;
+    padding:16px 0; text-align:center; background:var(--paper); border:2px solid var(--ink);
+    border-radius:3px; cursor:pointer;
+  }
+  .team-pick:active{ background:var(--pine); color:var(--paper); }
+
+  .hud{ display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; margin-bottom:10px; }
+  .clock{ font-size:clamp(26px,8vw,32px); font-weight:700; color:var(--pine); }
+  .hud-right{ text-align:right; font-size:12px; opacity:.8; }
+  .progress-bar{ height:6px; background:rgba(43,35,24,.15); border-radius:3px; overflow:hidden; margin-bottom:16px; }
+  .progress-fill{ height:100%; background:var(--pine); transition:width .3s ease; }
+
+  .tile-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .tile{
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center; flex-direction:column;
+    font-family:'Special Elite',monospace; font-size:22px; background:var(--paper);
+    border:2px solid var(--ink); border-radius:4px; cursor:pointer; position:relative;
+  }
+  .tile.done{ background:var(--success); color:var(--paper); border-color:var(--success); }
+  .tile.skipped{ background:var(--alert); color:var(--paper); border-color:var(--alert); }
+  .tile .sub{ font-family:'IBM Plex Mono',monospace; font-size:9px; margin-top:2px; }
+  .tile.my-start::after{
+    content:"START"; position:absolute; top:-8px; right:-8px; background:var(--gold); color:var(--ink);
+    font-family:'IBM Plex Mono',monospace; font-size:8px; padding:2px 4px; border-radius:2px; border:1px solid var(--ink);
+  }
+
+  .task-block{ background:var(--paper); border:2px dashed var(--ink); border-radius:3px; padding:14px; margin-bottom:12px; }
+  .task-label{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--rust); letter-spacing:.08em; text-transform:uppercase; margin:0 0 6px; }
+  .task-text{ font-size:16px; line-height:1.4; margin:0 0 10px; }
+  .hint-text{ font-size:13px; font-style:italic; color:var(--pine); margin:6px 0 0; display:none; }
+  .hint-text.show{ display:block; }
+  input[type=text]{
+    width:100%; font-family:'Bitter',serif; font-size:16px; padding:10px 12px;
+    border:2px solid var(--ink); border-radius:3px; background:#fff; margin-bottom:4px;
+  }
+  .mc-options{ display:flex; flex-direction:column; gap:8px; }
+  .mc-opt{
+    text-align:left; font-family:'Bitter',serif; font-size:14px; padding:10px 12px;
+    background:#fff; border:2px solid var(--ink); border-radius:3px; cursor:pointer;
+  }
+  .mc-opt.selected{ background:var(--pine); color:var(--paper); }
+  .row{ display:flex; gap:8px; margin-top:10px; }
+  .row .btn{ flex:1; }
+  .attempts-note{ font-family:'IBM Plex Mono',monospace; font-size:11px; opacity:.7; margin-top:6px; }
+  .feedback{ font-family:'IBM Plex Mono',monospace; font-size:13px; margin-top:8px; min-height:18px; }
+  .feedback.bad{ color:var(--alert); } .feedback.good{ color:var(--success); }
+
+  .stamp-overlay{
+    position:fixed; inset:0; background:rgba(43,35,24,.55); display:flex; align-items:center; justify-content:center;
+    z-index:50; opacity:0; pointer-events:none; transition:opacity .15s ease;
+  }
+  .stamp-overlay.show{ opacity:1; pointer-events:auto; }
+  .stamp{
+    font-family:'Special Elite',monospace; color:var(--alert); border:5px solid var(--alert); border-radius:8px;
+    padding:16px 20px; font-size:clamp(16px,5.5vw,22px); text-align:center; text-transform:uppercase;
+    letter-spacing:.03em; transform:rotate(-6deg) scale(.6); background:rgba(242,232,213,.95);
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .stamp-overlay.show .stamp{ animation:slam .35s cubic-bezier(.2,1.4,.4,1) forwards; }
+  @keyframes slam{ 0%{transform:rotate(-6deg) scale(2.2);opacity:0;} 60%{transform:rotate(-4deg) scale(.92);opacity:1;} 100%{transform:rotate(-4deg) scale(1);opacity:1;} }
+
+  .lb-row{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:14px; padding:8px 0; border-bottom:1px dotted rgba(43,35,24,.3); }
+  .lb-row .name{ font-family:'Bitter',serif; font-weight:600; }
+  .todo-flag{ font-size:10px; color:var(--rust); }
+  .small-note{ font-size:11px; opacity:.65; margin-top:10px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sheet">
+    <header class="brief">
+      <p class="eyebrow">Poufne · Hel · Uczestnicy misji</p>
+      <h1>Tajna Misja: Hel</h1>
+    </header>
+    <div class="body-pad" id="app"></div>
+  </div>
+</div>
+<div class="stamp-overlay" id="stampOverlay"><div class="stamp" id="stampText">Kara czasu</div></div>
+
+<script>
+/* ================================================================
+   SEKCJA DO EDYCJI — popraw treści i odpowiedzi pod swoją imprezę.
+   Legenda pól:
+   - clue: treść zadania pokazywana graczom
+   - hint: podpowiedź odblokowywana za +10s (opcjonalna)
+   - type 'text': correct = tablica akceptowanych odpowiedzi (małe litery,
+       bez polskich znaków nieważne — porównanie jest łagodne) ALBO null
+       jeśli nie da się tego sprawdzić automatycznie (wtedy każda
+       niepusta odpowiedź jest akceptowana — "manualne" zadanie)
+   - type 'mc': options = lista, correctIndexes = tablica poprawnych indeksów (od 0)
+   - numericTolerance: dla pytań liczbowych, akceptuje odpowiedź w danym +/- zakresie
+   ================================================================ */
+const PENALTY_WRONG_SEC = 5;
+const PENALTY_HINT_SEC = 10;
+const PENALTY_GIVEUP_SEC = 120;
+const MAX_ATTEMPTS = 3;
+const TEAM_COUNT = 5;
+
+const SPOTS = [
+  { id:'A',
+    location:{ clue:"Idźcie do bojki. Co pokazuje kompas?", hint:null, type:'text', correct:null },
+    general:{ clue:"Jak nazywa się najmłodsze dziecko Krzysia i Hani?", hint:"Jest taki alkohol w podobnym kolorze.", type:'text', correct:null } },
+  { id:'B',
+    location:{ clue:"Naleśnikarnia — jaki jest najdroższy naleśnik na karcie (nazwa lub cena)?", hint:null, type:'text', correct:null },
+    general:{ clue:"Ile to jest 20 + 20?", hint:"A sztanga?", type:'text', correct:["40"] } },
+  { id:'C',
+    location:{ clue:"Kościół — za kogo będzie odprawiona msza w najbliższą niedzielę?", hint:null, type:'text', correct:null },
+    general:{ clue:"Jak się nazywa kolega Krzysia?", hint:"Nie istnieje.", type:'text', correct:["nie istnieje","nieistnieje"] } },
+  { id:'D',
+    location:{ clue:"Peron — [TODO: dokończcie treść, coś tu przyklejacie i trzeba odczytać] hasło:", hint:null, type:'text', correct:["kodi"] },
+    general:{ clue:"Kto ukradł torebki?", hint:null, type:'text', correct:["cipek"] } },
+  { id:'E',
+    location:{ clue:"Port — jak nazywa się największy czarny kuter?", hint:null, type:'text', correct:["kuz-47","kuz 47","kuz47"] },
+    general:{ clue:"Kto jest odpowiedzialny za recykling wyrobów tytoniowych w Gminie Hel?", hint:"1200kcal", type:'text', correct:null } },
+  { id:'F',
+    location:{ clue:"Plaża strzeżona — jaka jest temperatura wody w morzu?", hint:null, type:'text', correct:null },
+    general:{ clue:"Do którego roku życia dziewczyny mają termin ważności?", hint:"Spytajcie się Limona.", type:'text', correct:null } },
+  { id:'G',
+    location:{ clue:"Tabliczka przy domu — w jakich językach jest informacja o wsi rybackiej Kuźnicy?", hint:null, type:'text', correct:["pl gb d","pl, gb, d","plgbd"] },
+    general:{ clue:"Jaka jest dokładna różnica wieku (w dniach) między Hanią a Krzysiem?", hint:"2008 to był rok przestępny.", type:'text', correct:null } },
+  { id:'H',
+    location:{ clue:"Paczkomat — jakiej firmy?", hint:null, type:'text', correct:null },
+    general:{ clue:"Jaki zasięg ma Ward? (LoL)", hint:"Chodzi o zwykłego Warda (Stealth Ward) — jednostki mapy.", type:'text', correct:["900"], numericTolerance:50 } },
+  { id:'I',
+    location:{ clue:"Kutry przy ABC — jakiej narodowości był ten, kto pływał na tym kutrze?", hint:null, type:'text', correct:null },
+    general:{ clue:"Ile jest championów w LoL-u?", hint:null, type:'text', correct:["173"], numericTolerance:10 } },
+  { id:'J',
+    location:{ clue:"Orlik — co widzicie, cwele, na trawie?", hint:null, type:'text', correct:["kuźnica","kuznica"] },
+    general:{ clue:"Jak się nazywa dinozaur z Nigru, który ma 500 zębów i kradnie?", hint:null, type:'text', correct:["nigersaurus"] } },
+  { id:'K',
+    location:{ clue:"W krzakach przy wejściu 33 — co tam znajdziecie?", hint:null, type:'text', correct:["natura 2000","natura2000"] },
+    general:{ clue:"Czym czyścił buty Maciej Boryna?", hint:null, type:'text', correct:null } },
+  { id:'L',
+    location:{ clue:"Piekarnia / cukiernia — ile kosztuje kajzerka?", hint:"Dodatkowe punkty, jak ktoś przyniesie kajzerki.", type:'text', correct:["1,5","1.5","1,50","1.50"] },
+    general:{ clue:"Co jest mniejsze od Bajta?", hint:null, type:'mc', options:["Gigabajt","3 bit","pół Bajta"], correctIndexes:[1,2] } },
+  { id:'M',
+    location:{ clue:"[TODO: uzupełnij pełną treść punktu 13 z listy Miejsca — 'w stronę chałup schodki...']", hint:null, type:'text', correct:null },
+    general:{ clue:"Jak się nazywa żydowska świeca?", hint:null, type:'text', correct:["chanukija","menora"] } },
+  { id:'N',
+    location:{ clue:"Nagrajcie filmik jak się podciągacie — jedno podciągnięcie to -10s kary z czasu (mogą podciągać się różne osoby, max 10 podciągnięć łącznie). Wpiszcie ile podciągnięć wyszło:", hint:null, type:'text', correct:null, bonusSecPerUnit:10, bonusMaxUnits:10 },
+    general:{ clue:"Kto jest prezydentem USA?", hint:"Benjamin Natajkutasiu", type:'text', correct:["benjamin natajkutasiu","natajkutasiu"] } },
+  { id:'O',
+    location:{ clue:"Jak się nazywa jedna z wielu ksywek związana z tym zdjęciem oraz sposobem zmotoryzowania tej osoby? Odpowiedz jednym słowem, w mianowniku, liczba pojedyncza.", hint:"♿", type:'text', correct:["wózek","wozek"] },
+    general:{ clue:"Ile ciasteczek da się upiec w 46 piecach w ciągu 4 lat?", hint:null, type:'mc', options:["271 tyś","6 mln","6 gazylionów"], correctIndexes:[2] } }
+];
+/* ================================================================
+   KONIEC SEKCJI DO EDYCJI
+   ================================================================ */
+
+function normalize(str){
+  return (str||"").toString().trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g," ");
+}
+function checkText(sub, input){
+  if(!sub.correct) return true; // manualne zadanie — każda odpowiedź OK
+  const n = normalize(input);
+  if(!n) return false;
+  if(sub.numericTolerance){
+    const num = parseFloat(n.replace(",", "."));
+    const target = parseFloat(sub.correct[0]);
+    if(!isNaN(num) && !isNaN(target)) return Math.abs(num-target) <= sub.numericTolerance;
+  }
+  return sub.correct.some(c => n === normalize(c) || n.includes(normalize(c)));
+}
+
+const app = document.getElementById('app');
+const stampOverlay = document.getElementById('stampOverlay');
+const stampText = document.getElementById('stampText');
+let state = { screen:'pickTeam', team:null, progress:null, startSpot:null, timerHandle:null, activeSpot:null, attempts:0, hintUnlocked:false, mcSelLoc:null, mcSelGen:null };
+
+function showStamp(msg){
+  stampText.textContent = msg;
+  stampOverlay.classList.add('show');
+  setTimeout(()=>stampOverlay.classList.remove('show'), 1400);
+}
+function fmtTime(ms){
+  const total = Math.max(0, Math.floor(ms/1000));
+  const h = Math.floor(total/3600), m = Math.floor((total%3600)/60), s = total%60;
+  return (h>0? h+':'+String(m).padStart(2,'0') : m) + ':' + String(s).padStart(2,'0');
+}
+
+/* ---------- SHARED START ASSIGNMENT ---------- */
+async function getStartAssignment(){
+  try{
+    const r = await window.storage.get('startAssignment', true);
+    if(r && r.value) return JSON.parse(r.value);
+  }catch(e){}
+  const ids = SPOTS.map(s=>s.id);
+  for(let i=ids.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ids[i],ids[j]]=[ids[j],ids[i]]; }
+  const assignment = {};
+  for(let t=1;t<=TEAM_COUNT;t++) assignment[t] = ids[(t-1) % ids.length];
+  try{ await window.storage.set('startAssignment', JSON.stringify(assignment), true); }catch(e){}
+  return assignment;
+}
+
+/* ---------- TEAM PICK ---------- */
+const TEAM_PASSWORDS = { 1:"jebnaajajo3", 2:"jebnabjajo3", 3:"jebnacjajo3", 4:"jebnadjajo3", 5:"jebnaejajo3" };
+
+function renderPickTeam(){
+  let html = '<p class="task-text">Wybierz numer swojej drużyny (1-5):</p><div class="team-grid">';
+  for(let i=1;i<=TEAM_COUNT;i++) html += `<div class="team-pick" data-t="${i}">${i}</div>`;
+  html += '</div>';
+  app.innerHTML = html;
+  document.querySelectorAll('.team-pick').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      renderPasswordScreen(parseInt(el.dataset.t,10));
+    });
+  });
+}
+
+function renderPasswordScreen(teamNum){
+  app.innerHTML = `
+    <p class="task-text">Drużyna ${teamNum} — podaj hasło:</p>
+    <input type="text" id="pwInput" placeholder="Hasło...">
+    <p class="feedback" id="pwFeedback"></p>
+    <div class="row">
+      <button class="btn secondary" id="pwBack">Wróć</button>
+      <button class="btn" id="pwSubmit">Wejdź</button>
+    </div>
+  `;
+  const submit = async ()=>{
+    const val = normalize(document.getElementById('pwInput').value);
+    const expected = normalize(TEAM_PASSWORDS[teamNum]);
+    const fb = document.getElementById('pwFeedback');
+    if(val === expected){
+      state.team = teamNum;
+      await loadOrInitProgress();
+      state.screen = 'grid';
+      renderGrid();
+      startClock();
+    } else {
+      fb.textContent = 'Złe hasło.';
+      fb.className = 'feedback bad';
+    }
+  };
+  document.getElementById('pwBack').addEventListener('click', renderPickTeam);
+  document.getElementById('pwSubmit').addEventListener('click', submit);
+  document.getElementById('pwInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') submit(); });
+}
+
+/* ---------- PROGRESS LOAD/SAVE ---------- */
+async function loadOrInitProgress(){
+  const key = 'progress:team'+state.team;
+  try{
+    const r = await window.storage.get(key, false);
+    if(r && r.value){ state.progress = JSON.parse(r.value); return; }
+  }catch(e){}
+  const assignment = await getStartAssignment();
+  state.startSpot = assignment[state.team];
+  const tiles = {};
+  SPOTS.forEach(s => tiles[s.id] = { status:'pending', attempts:0, hintUsed:false, penaltyMs:0 });
+  state.progress = { startedAt:Date.now(), penaltyMs:0, startSpot:state.startSpot, tiles, finished:false };
+  await saveProgress();
+}
+async function saveProgress(){
+  try{ await window.storage.set('progress:team'+state.team, JSON.stringify(state.progress), false); }catch(e){}
+}
+
+function startClock(){
+  clearInterval(state.timerHandle);
+  state.timerHandle = setInterval(()=>{
+    const el = document.getElementById('clockDisplay');
+    if(el){
+      const elapsed = Date.now() - state.progress.startedAt + state.progress.penaltyMs;
+      el.textContent = fmtTime(elapsed);
+    }
+  }, 500);
+}
+
+/* ---------- GRID ---------- */
+function renderGrid(){
+  const tiles = state.progress.tiles;
+  const doneCount = Object.values(tiles).filter(t=>t.status!=='pending').length;
+  let html = `
+    <div class="hud">
+      <div class="clock" id="clockDisplay">--:--</div>
+      <div class="hud-right">Drużyna ${state.team}<br>Start: ${state.progress.startSpot}</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(doneCount/SPOTS.length*100)}%"></div></div>
+    <div class="tile-grid">
+  `;
+  SPOTS.forEach(s => {
+    const t = tiles[s.id];
+    const cls = t.status==='done' ? 'done' : (t.status==='skipped' ? 'skipped' : '');
+    const startFlag = s.id===state.progress.startSpot ? ' my-start' : '';
+    html += `<div class="tile ${cls}${startFlag}" data-id="${s.id}">${s.id}${t.status!=='pending'?`<span class="sub">${t.status==='done'?'✓':'✗'}</span>`:''}</div>`;
+  });
+  html += '</div>';
+  if(doneCount === SPOTS.length){
+    html += '<button class="btn" id="finishBtn" style="margin-top:16px;">Zakończ misję i zobacz wynik</button>';
+  }
+  app.innerHTML = html;
+  document.querySelectorAll('.tile').forEach(el=>{
+    el.addEventListener('click', ()=> openSpot(el.dataset.id));
+  });
+  const fb = document.getElementById('finishBtn');
+  if(fb) fb.addEventListener('click', finishGame);
+}
+
+/* ---------- SPOT DETAIL ---------- */
+function openSpot(id){
+  state.activeSpot = id;
+  state.attempts = state.progress.tiles[id].attempts;
+  state.hintUnlocked = state.progress.tiles[id].hintUsed;
+  state.mcSelLoc = null; state.mcSelGen = null;
+  renderSpot();
+}
+function renderSpot(){
+  const spot = SPOTS.find(s=>s.id===state.activeSpot);
+  const t = state.progress.tiles[spot.id];
+  if(t.status !== 'pending'){
+    app.innerHTML = `
+      <p class="task-label">Punkt ${spot.id} — ${t.status==='done'?'ukończony':'poddany'}</p>
+      ${renderTaskReadOnly('Miejsce', spot.location)}
+      ${renderTaskReadOnly('Pytanie ogólne', spot.general)}
+      <button class="btn secondary" id="backBtn" style="margin-top:10px;">Wróć do mapy</button>
+    `;
+    document.getElementById('backBtn').addEventListener('click', ()=>{ state.screen='grid'; renderGrid(); });
+    return;
+  }
+  app.innerHTML = `
+    <p class="task-label">Punkt ${spot.id} · próba ${t.attempts+1}/${MAX_ATTEMPTS}</p>
+    <div class="task-block">
+      <p class="task-label">Miejsce</p>
+      <p class="task-text">${spot.location.clue}</p>
+      ${spot.location.type==='mc' ? renderMc(spot.location,'loc') : `<input type="text" id="locInput" placeholder="Odpowiedź...">`}
+      ${spot.location.hint ? `<p class="hint-text" id="locHint">💡 ${spot.location.hint}</p>` : ''}
+    </div>
+    <div class="task-block">
+      <p class="task-label">Pytanie ogólne</p>
+      <p class="task-text">${spot.general.clue}</p>
+      ${spot.general.type==='mc' ? renderMc(spot.general,'gen') : `<input type="text" id="genInput" placeholder="Odpowiedź...">`}
+      ${spot.general.hint ? `<p class="hint-text" id="genHint">💡 ${spot.general.hint}</p>` : ''}
+    </div>
+    <p class="feedback" id="feedback"></p>
+    <div class="row">
+      <button class="btn secondary" id="hintBtn" ${state.hintUnlocked?'disabled':''}>Podpowiedź (+${PENALTY_HINT_SEC}s)</button>
+      <button class="btn" id="submitBtn">Sprawdź</button>
+    </div>
+    <button class="btn secondary" id="giveupBtn" style="margin-top:8px; background:var(--paper);">Poddaj się (+${Math.floor(PENALTY_GIVEUP_SEC/60)}min)</button>
+    <button class="btn secondary" id="backBtn2" style="margin-top:8px;">Wróć do mapy</button>
+  `;
+  if(state.hintUnlocked){
+    const lh=document.getElementById('locHint'), gh=document.getElementById('genHint');
+    if(lh) lh.classList.add('show'); if(gh) gh.classList.add('show');
+  }
+  document.querySelectorAll('.mc-opt').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const group = el.dataset.group;
+      document.querySelectorAll(`.mc-opt[data-group="${group}"]`).forEach(o=>o.classList.remove('selected'));
+      el.classList.add('selected');
+      if(group==='loc') state.mcSelLoc = parseInt(el.dataset.i,10);
+      else state.mcSelGen = parseInt(el.dataset.i,10);
+    });
+  });
+  const hintBtn = document.getElementById('hintBtn');
+  hintBtn.addEventListener('click', async ()=>{
+    state.hintUnlocked = true;
+    state.progress.tiles[spot.id].hintUsed = true;
+    state.progress.penaltyMs += PENALTY_HINT_SEC*1000;
+    await saveProgress();
+    showStamp(`+${PENALTY_HINT_SEC}s kary — podpowiedź odblokowana`);
+    renderSpot();
+  });
+  document.getElementById('submitBtn').addEventListener('click', onSubmit);
+  document.getElementById('giveupBtn').addEventListener('click', onGiveUp);
+  document.getElementById('backBtn2').addEventListener('click', ()=>{ state.screen='grid'; renderGrid(); });
+}
+function renderMc(sub, group){
+  return `<div class="mc-options">${sub.options.map((o,i)=>`<div class="mc-opt" data-group="${group}" data-i="${i}">${o}</div>`).join('')}</div>`;
+}
+function renderTaskReadOnly(label, sub){
+  return `<div class="task-block"><p class="task-label">${label}</p><p class="task-text">${sub.clue}</p></div>`;
+}
+
+async function onSubmit(){
+  const spot = SPOTS.find(s=>s.id===state.activeSpot);
+  const t = state.progress.tiles[spot.id];
+  let locOk, genOk;
+  if(spot.location.type==='mc') locOk = spot.location.correctIndexes.includes(state.mcSelLoc);
+  else locOk = checkText(spot.location, document.getElementById('locInput').value);
+  if(spot.general.type==='mc') genOk = spot.general.correctIndexes.includes(state.mcSelGen);
+  else genOk = checkText(spot.general, document.getElementById('genInput').value);
+
+  const fb = document.getElementById('feedback');
+  if(locOk && genOk){
+    t.status = 'done';
+    let bonusNote = '';
+    if(spot.location.bonusSecPerUnit){
+      const raw = parseFloat(document.getElementById('locInput').value.replace(",", "."));
+      const units = isNaN(raw) ? 0 : Math.max(0, Math.min(spot.location.bonusMaxUnits, Math.floor(raw)));
+      const bonusMs = units * spot.location.bonusSecPerUnit * 1000;
+      state.progress.penaltyMs -= bonusMs;
+      bonusNote = ` Bonus: -${units*spot.location.bonusSecPerUnit}s.`;
+    }
+    await saveProgress();
+    fb.textContent = 'Dobra robota! Punkt zaliczony.' + bonusNote;
+    fb.className = 'feedback good';
+    setTimeout(()=>{ state.screen='grid'; renderGrid(); }, 700);
+  } else {
+    t.attempts++;
+    state.progress.penaltyMs += PENALTY_WRONG_SEC*1000;
+    await saveProgress();
+    showStamp(`+${PENALTY_WRONG_SEC}s kary — błędna odpowiedź`);
+    if(t.attempts >= MAX_ATTEMPTS){
+      fb.textContent = 'Wykorzystano wszystkie próby. Poddajecie punkt.';
+      fb.className = 'feedback bad';
+      setTimeout(onGiveUp, 900);
+    } else {
+      fb.textContent = `Coś nie gra — zostały ${MAX_ATTEMPTS-t.attempts} próby.`;
+      fb.className = 'feedback bad';
+    }
+  }
+}
+
+async function onGiveUp(){
+  const spot = SPOTS.find(s=>s.id===state.activeSpot);
+  const t = state.progress.tiles[spot.id];
+  t.status = 'skipped';
+  state.progress.penaltyMs += PENALTY_GIVEUP_SEC*1000;
+  await saveProgress();
+  showStamp(`+${Math.floor(PENALTY_GIVEUP_SEC/60)}min kary — punkt poddany`);
+  setTimeout(()=>{ state.screen='grid'; renderGrid(); }, 900);
+}
+
+/* ---------- FINISH ---------- */
+async function finishGame(){
+  clearInterval(state.timerHandle);
+  state.progress.finished = true;
+  await saveProgress();
+  const totalMs = Date.now() - state.progress.startedAt + state.progress.penaltyMs;
+  const key = `result:team${state.team}`;
+  try{ await window.storage.set(key, JSON.stringify({ team:state.team, totalMs, finishedAt:Date.now() }), true); }catch(e){}
+  try{
+    const url = `https://script.google.com/macros/s/AKfycbx8BENx78AsVS_NjJuLspmAjKPEXioJz4_5YKXaB33fjX7HOGKqpiqMNQh5o6GAa2zH/exec?team=${encodeURIComponent(state.team)}&time=${encodeURIComponent(fmtTime(totalMs))}`;
+    fetch(url, { mode:'no-cors' });
+  }catch(e){}
+  renderFinish(totalMs);
+}
+
+async function renderFinish(myTotalMs){
+  app.innerHTML = `
+    <div style="text-align:center;">
+      <p class="task-label">Misja zakończona</p>
+      <p class="task-text" style="font-family:'Special Elite',monospace; font-size:22px;">Drużyna ${state.team}: ${fmtTime(myTotalMs)}</p>
+    </div>
+    <div id="lbList" style="margin-top:16px;"><p class="attempts-note">Wczytywanie tablicy wyników...</p></div>
+    <p class="small-note">Wyniki wszystkich 5 drużyn są widoczne publicznie na tej tablicy.</p>
+  `;
+  try{
+    const results = [];
+    for(let tnum=1;tnum<=TEAM_COUNT;tnum++){
+      try{
+        const r = await window.storage.get('result:team'+tnum, true);
+        if(r && r.value) results.push(JSON.parse(r.value));
+      }catch(e){}
+    }
+    results.sort((a,b)=>a.totalMs-b.totalMs);
+    const lb = document.getElementById('lbList');
+    if(results.length===0){ lb.innerHTML = '<p class="attempts-note">Brak wyników jeszcze.</p>'; return; }
+    lb.innerHTML = results.map((r,i)=>`<div class="lb-row"><span class="name">${i+1}. Drużyna ${r.team}</span><span>${fmtTime(r.totalMs)}</span></div>`).join('');
+  }catch(e){}
+}
+
+renderPickTeam();
+</script>
+</body>
+</html>
