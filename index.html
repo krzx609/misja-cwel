@@ -150,13 +150,13 @@ const TEAM_COUNT = 5;
 
 const SPOTS = [
   { id:'A',
-    location:{ clue:"Idźcie do bojki. Co pokazuje kompas?", hint:null, type:'text', correct:null },
+    location:{ clue:"Stańcie przy bojce. Ile stopni w stronę kościoła pokazuje kompas?", hint:null, type:'text', correct:["27 ne","27ne","ne 27","ne27","27° ne","27°ne"] },
     general:{ clue:"Jak nazywa się najmłodsze dziecko Krzysia i Hani?", hint:"Jest taki alkohol w podobnym kolorze.", type:'text', correct:null } },
   { id:'B',
-    location:{ clue:"Naleśnikarnia — jaki jest najdroższy naleśnik na karcie (nazwa lub cena)?", hint:null, type:'text', correct:null },
+    location:{ clue:"Naleśnikarnia — jaki jest najdroższy naleśnik na karcie?", hint:null, type:'text', correct:null },
     general:{ clue:"Ile to jest 20 + 20?", hint:"A sztanga?", type:'text', correct:["60"] } },
   { id:'C',
-    location:{ clue:"Kościół — za kogo będzie odprawiona msza w najbliższą niedzielę?", hint:null, type:'text', correct:null },
+    location:{ clue:"Kościół — za kogo będzie odprawiana pierwsza msza w najbliższą niedzielę?", hint:null, type:'text', correct:["za parafian"] },
     general:{ clue:"Jak się nazywa kolega Krzysia?", hint:"Nie istnieje.", type:'text', correct:["nie istnieje","nieistnieje"] } },
   { id:'D',
     location:{ clue:"Peron — co to za pies?", hint:null, type:'text', correct:["kodi"] },
@@ -165,14 +165,14 @@ const SPOTS = [
     location:{ clue:"Port — jak nazywa się największy czarny kuter?", hint:null, type:'text', correct:["kuz-47","kuz 47","kuz47"] },
     general:{ clue:"Kto jest odpowiedzialny za recykling wyrobów tytoniowych w Gminie Hel?", hint:"1200kcal", type:'text', correct:null } },
   { id:'F',
-    location:{ clue:"Plaża strzeżona — jaka jest temperatura wody w morzu?", hint:null, type:'text', correct:null },
+    location:{ clue:"Plaża strzeżona — jaka jest temperatura wody w morzu?", hint:null, type:'text', correct:["17"], numericTolerance:1 },
     general:{ clue:"Do którego roku życia dziewczyny mają termin ważności?", hint:"Spytajcie się Limona.", type:'text', correct:null } },
   { id:'G',
-    location:{ clue:"Tabliczka przy domu — w jakich językach jest informacja o wsi rybackiej Kuźnicy?", hint:null, type:'text', correct:["pl gb d","pl, gb, d","plgbd"] },
+    location:{ clue:"Tabliczka przy domu — w jakich językach jest informacja o wsi rybackiej Kuźnicy? (odpowiedzcie w formie skrótów oznaczających język, np. DKJDNIG)", hint:null, type:'text', correct:["pl gb d","pl, gb, d","plgbd"] },
     general:{ clue:"Jaka jest dokładna różnica wieku (w dniach) między Hanią a Krzysiem?", hint:"2008 to był rok przestępny.", type:'text', correct:null } },
   { id:'H',
-    location:{ clue:"Paczkomat — jakiej firmy?", hint:null, type:'text', correct:null },
-    general:{ clue:"Jaki zasięg ma Ward? (LoL)", hint:"Chodzi o zwykłego Warda (Stealth Ward) — jednostki mapy.", type:'text', correct:["900"], numericTolerance:50 } },
+    location:{ clue:"Paczkomat — jakiej firmy?", hint:null, type:'text', correct:["inpost"] },
+    general:{ clue:"Jaki zasięg ma Ward? (LoL)", hint:"Chodzi o zwykłego Warda (Stealth Ward) — jednostki mapy.", type:'text', correct:["500"], numericTolerance:50 } },
   { id:'I',
     location:{ clue:"Kutry przy ABC — jakiej narodowości był ten, kto pływał na tym kutrze?", hint:null, type:'text', correct:null },
     general:{ clue:"Ile jest championów w LoL-u?", hint:null, type:'text', correct:["173"], numericTolerance:10 } },
@@ -193,7 +193,7 @@ const SPOTS = [
     general:{ clue:"Kto jest prezydentem USA?", hint:"Benjamin Natajkutasiu", type:'text', correct:["benjamin natajkutasiu","natajkutasiu"] } },
   { id:'O',
     location:{ clue:"Jak się nazywa jedna z wielu ksywek związana z tym zdjęciem oraz sposobem zmotoryzowania tej osoby? Odpowiedz jednym słowem, w mianowniku, liczba pojedyncza.", hint:"♿", type:'text', correct:["wózek","wozek"] },
-    general:{ clue:"Ile ciasteczek da się upiec w 46 piecach w ciągu 4 lat?", hint:null, type:'mc', options:["271 tyś","6 mln","6 gazylionów"], correctIndexes:[2] } }
+    general:{ clue:"Ile ciasteczek da się upiec w 46 piecach w ciągu 4 lat?", hint:null, type:'mc', options:["271 tyś","6 mln","6 gazylionów"], correctIndexes:[0] } }
 ];
 /* ================================================================
    KONIEC SEKCJI DO EDYCJI
@@ -219,7 +219,7 @@ function checkText(sub, input){
 const app = document.getElementById('app');
 const stampOverlay = document.getElementById('stampOverlay');
 const stampText = document.getElementById('stampText');
-let state = { screen:'pickTeam', team:null, progress:null, startSpot:null, timerHandle:null, activeSpot:null, attempts:0, hintUnlocked:false, mcSelLoc:null, mcSelGen:null };
+let state = { screen:'pickTeam', team:null, progress:null, startSpot:null, timerHandle:null, activeSpot:null, mcSelLoc:null, mcSelGen:null };
 
 function showStamp(msg){
   stampText.textContent = msg;
@@ -301,7 +301,7 @@ async function loadOrInitProgress(){
   const assignment = await getStartAssignment();
   state.startSpot = assignment[state.team];
   const tiles = {};
-  SPOTS.forEach(s => tiles[s.id] = { status:'pending', attempts:0, hintUsed:false, penaltyMs:0 });
+  SPOTS.forEach(s => tiles[s.id] = { status:'pending', locDone:false, locAttempts:0, genAttempts:0, hintUsed:false, penaltyMs:0 });
   state.progress = { startedAt:Date.now(), penaltyMs:0, startSpot:state.startSpot, tiles, finished:false };
   await saveProgress();
 }
@@ -353,8 +353,6 @@ function renderGrid(){
 /* ---------- SPOT DETAIL ---------- */
 function openSpot(id){
   state.activeSpot = id;
-  state.attempts = state.progress.tiles[id].attempts;
-  state.hintUnlocked = state.progress.tiles[id].hintUsed;
   state.mcSelLoc = null; state.mcSelGen = null;
   state.locConfirmed = false; state.genConfirmed = false;
   renderSpot();
@@ -372,45 +370,46 @@ function renderSpot(){
     document.getElementById('backBtn').addEventListener('click', ()=>{ state.screen='grid'; renderGrid(); });
     return;
   }
+  const isLoc = !t.locDone;
+  const sub = isLoc ? spot.location : spot.general;
+  const group = isLoc ? 'loc' : 'gen';
+  const label = isLoc ? 'Miejsce' : 'Pytanie ogólne';
+  const attempts = (isLoc ? t.locAttempts : t.genAttempts) || 0;
+  const hintElId = isLoc ? 'locHint' : 'genHint';
+
   app.innerHTML = `
-    <p class="task-label">Punkt ${spot.id} · próba ${t.attempts+1}/${MAX_ATTEMPTS}</p>
+    <p class="task-label">Punkt ${spot.id} · etap ${isLoc?'1':'2'}/2 · próba ${attempts+1}/${MAX_ATTEMPTS}</p>
+    ${isLoc ? '' : '<p class="attempts-note">✓ Miejsce zaliczone — teraz pytanie ogólne</p>'}
     <div class="task-block">
-      <p class="task-label">Miejsce</p>
-      <p class="task-text">${spot.location.clue}</p>
-      ${renderAnswerField(spot.location,'loc')}
-      ${spot.location.hint ? `<p class="hint-text" id="locHint">💡 ${spot.location.hint}</p>` : ''}
-    </div>
-    <div class="task-block">
-      <p class="task-label">Pytanie ogólne</p>
-      <p class="task-text">${spot.general.clue}</p>
-      ${renderAnswerField(spot.general,'gen')}
-      ${spot.general.hint ? `<p class="hint-text" id="genHint">💡 ${spot.general.hint}</p>` : ''}
+      <p class="task-label">${label}</p>
+      <p class="task-text">${sub.clue}</p>
+      ${renderAnswerField(sub, group)}
+      ${sub.hint ? `<p class="hint-text" id="${hintElId}">💡 ${sub.hint}</p>` : ''}
     </div>
     <p class="feedback" id="feedback"></p>
     <div class="row">
-      <button class="btn secondary" id="hintBtn" ${state.hintUnlocked?'disabled':''}>Podpowiedź (+${PENALTY_HINT_SEC}s)</button>
+      <button class="btn secondary" id="hintBtn" ${t.hintUsed?'disabled':''}>Podpowiedź (+${PENALTY_HINT_SEC}s)</button>
       <button class="btn" id="submitBtn">Sprawdź</button>
     </div>
     <button class="btn secondary" id="giveupBtn" style="margin-top:8px; background:var(--paper);">Poddaj się (+${Math.floor(PENALTY_GIVEUP_SEC/60)}min)</button>
     <button class="btn secondary" id="backBtn2" style="margin-top:8px;">Wróć do mapy</button>
   `;
-  if(state.hintUnlocked){
-    const lh=document.getElementById('locHint'), gh=document.getElementById('genHint');
-    if(lh) lh.classList.add('show'); if(gh) gh.classList.add('show');
+  if(t.hintUsed){
+    const h=document.getElementById(hintElId);
+    if(h) h.classList.add('show');
   }
   document.querySelectorAll('.mc-opt').forEach(el=>{
     el.addEventListener('click', ()=>{
-      const group = el.dataset.group;
-      document.querySelectorAll(`.mc-opt[data-group="${group}"]`).forEach(o=>o.classList.remove('selected'));
+      const grp = el.dataset.group;
+      document.querySelectorAll(`.mc-opt[data-group="${grp}"]`).forEach(o=>o.classList.remove('selected'));
       el.classList.add('selected');
-      if(group==='loc') state.mcSelLoc = parseInt(el.dataset.i,10);
+      if(grp==='loc') state.mcSelLoc = parseInt(el.dataset.i,10);
       else state.mcSelGen = parseInt(el.dataset.i,10);
     });
   });
   const hintBtn = document.getElementById('hintBtn');
   hintBtn.addEventListener('click', async ()=>{
-    state.hintUnlocked = true;
-    state.progress.tiles[spot.id].hintUsed = true;
+    t.hintUsed = true;
     state.progress.penaltyMs += PENALTY_HINT_SEC*1000;
     await saveProgress();
     showStamp(`+${PENALTY_HINT_SEC}s kary — podpowiedź odblokowana`);
@@ -418,11 +417,11 @@ function renderSpot(){
   });
   document.querySelectorAll('.confirm-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const group = btn.dataset.group;
+      const grp = btn.dataset.group;
       const nowSelected = !btn.classList.contains('selected');
       btn.classList.toggle('selected');
       btn.textContent = nowSelected ? '✓ Zrobione' : 'Zrobione';
-      if(group==='loc') state.locConfirmed = nowSelected;
+      if(grp==='loc') state.locConfirmed = nowSelected;
       else state.genConfirmed = nowSelected;
     });
   });
@@ -445,40 +444,68 @@ function renderTaskReadOnly(label, sub){
 async function onSubmit(){
   const spot = SPOTS.find(s=>s.id===state.activeSpot);
   const t = state.progress.tiles[spot.id];
-  let locOk, genOk;
-  if(spot.location.type==='mc') locOk = spot.location.correctIndexes.includes(state.mcSelLoc);
-  else if(spot.location.type==='confirm') locOk = state.locConfirmed === true;
-  else locOk = checkText(spot.location, document.getElementById('locInput').value);
+  const fb = document.getElementById('feedback');
+
+  if(!t.locDone){
+    let locOk;
+    if(spot.location.type==='mc') locOk = spot.location.correctIndexes.includes(state.mcSelLoc);
+    else if(spot.location.type==='confirm') locOk = state.locConfirmed === true;
+    else locOk = checkText(spot.location, document.getElementById('locInput').value);
+
+    if(locOk){
+      t.locDone = true;
+      let bonusNote = '';
+      if(spot.location.bonusSecPerUnit){
+        const raw = parseFloat(document.getElementById('locInput').value.replace(",", "."));
+        const units = isNaN(raw) ? 0 : Math.max(0, Math.min(spot.location.bonusMaxUnits, Math.floor(raw)));
+        const bonusMs = units * spot.location.bonusSecPerUnit * 1000;
+        state.progress.penaltyMs -= bonusMs;
+        bonusNote = ` Bonus: -${units*spot.location.bonusSecPerUnit}s.`;
+      }
+      await saveProgress();
+      fb.textContent = 'Miejsce zaliczone! Odblokowano pytanie ogólne.' + bonusNote;
+      fb.className = 'feedback good';
+      state.mcSelGen = null; state.genConfirmed = false;
+      setTimeout(renderSpot, 700);
+    } else {
+      t.locAttempts = (t.locAttempts||0) + 1;
+      state.progress.penaltyMs += PENALTY_WRONG_SEC*1000;
+      await saveProgress();
+      showStamp(`+${PENALTY_WRONG_SEC}s kary — błędna odpowiedź`);
+      if(t.locAttempts >= MAX_ATTEMPTS){
+        fb.textContent = 'Wykorzystano wszystkie próby. Poddajecie punkt.';
+        fb.className = 'feedback bad';
+        setTimeout(onGiveUp, 900);
+      } else {
+        fb.textContent = `Coś nie gra — zostały ${MAX_ATTEMPTS-t.locAttempts} próby.`;
+        fb.className = 'feedback bad';
+      }
+    }
+    return;
+  }
+
+  let genOk;
   if(spot.general.type==='mc') genOk = spot.general.correctIndexes.includes(state.mcSelGen);
   else if(spot.general.type==='confirm') genOk = state.genConfirmed === true;
   else genOk = checkText(spot.general, document.getElementById('genInput').value);
 
-  const fb = document.getElementById('feedback');
-  if(locOk && genOk){
+  if(genOk){
     t.status = 'done';
-    let bonusNote = '';
-    if(spot.location.bonusSecPerUnit){
-      const raw = parseFloat(document.getElementById('locInput').value.replace(",", "."));
-      const units = isNaN(raw) ? 0 : Math.max(0, Math.min(spot.location.bonusMaxUnits, Math.floor(raw)));
-      const bonusMs = units * spot.location.bonusSecPerUnit * 1000;
-      state.progress.penaltyMs -= bonusMs;
-      bonusNote = ` Bonus: -${units*spot.location.bonusSecPerUnit}s.`;
-    }
     await saveProgress();
-    fb.textContent = 'Dobra robota! Punkt zaliczony.' + bonusNote;
+    fb.textContent = 'Dobra robota! Punkt zaliczony.';
     fb.className = 'feedback good';
     setTimeout(()=>{ state.screen='grid'; renderGrid(); }, 700);
   } else {
-    t.attempts++;
+    t.genAttempts = (t.genAttempts||0) + 1;
     state.progress.penaltyMs += PENALTY_WRONG_SEC*1000;
     await saveProgress();
     showStamp(`+${PENALTY_WRONG_SEC}s kary — błędna odpowiedź`);
-    if(t.attempts >= MAX_ATTEMPTS){
+    if(t.genAttempts >= MAX_ATTEMPTS){
       fb.textContent = 'Wykorzystano wszystkie próby. Poddajecie punkt.';
       fb.className = 'feedback bad';
       setTimeout(onGiveUp, 900);
     } else {
-      fb.textContent = `Coś nie gra — zostały ${MAX_ATTEMPTS-t.attempts} próby.`;
+      fb.textContent = `Coś nie gra — zostały ${MAX_ATTEMPTS-t.genAttempts} próby.`;
       fb.className = 'feedback bad';
     }
   }
